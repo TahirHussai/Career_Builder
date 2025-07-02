@@ -1,0 +1,14 @@
+# Visual Studio Multiple Startup Projects Configuration
+# This file helps Visual Studio 2022 recognize the correct startup configuration
+
+[MultipleStartupProjects]
+CareerBuilder.API=Start
+CareerBuilder=Start
+
+[ProjectPriority]
+1=CareerBuilder.API
+2=CareerBuilder
+
+[LaunchProfiles]
+CareerBuilder.API=CareerBuilder.API
+CareerBuilder=CareerBuilder

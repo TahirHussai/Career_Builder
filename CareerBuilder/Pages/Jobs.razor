@@ -1,0 +1,409 @@
+@page "/jobs"
+@using System.Text.RegularExpressions
+@using System.Web
+@using CareerBuilder.Models
+@using CareerBuilder.Services
+@using CareerBuilder.Services.Interface
+@inject IAuthService AuthService
+@inject IJobService JobService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Jobs - CareerBuilder</PageTitle>
+
+<div class="bg-white">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Page header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                    Job Opportunities
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Find your next career opportunity
+                </p>
+            </div>
+            <AuthorizeView Roles="Employer,Admin">
+                <Authorized>
+                    <div class="mt-4 flex md:mt-0 md:ml-4">
+                        <button @onclick="NavigateToCreateJob"
+                                class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                            Post Job
+                        </button>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div>
+                        <label for="search" class="block text-sm font-medium text-gray-700">Search Jobs</label>
+                        <input type="text" 
+                               id="search" 
+                               @bind="searchTerm"
+                               @oninput="OnSearchChanged"
+                               placeholder="Job title, company, keywords..."
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                    </div>
+                    <div>
+                        <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
+                        <select id="location"
+                                @onchange="OnLocationChanged"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="">All Locations</option>
+                            <option value="remote">Remote</option>
+                            <option value="new-york">New York</option>
+                            <option value="san-francisco">San Francisco</option>
+                            <option value="london">London</option>
+                            <option value="toronto">Toronto</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                        <select id="category"
+                                @onchange="OnCategoryChanged"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="">All Categories</option>
+                            <option value="technology">Technology</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="sales">Sales</option>
+                            <option value="design">Design</option>
+                            <option value="finance">Finance</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Listings -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            @if (isLoading)
+            {
+                <div class="text-center py-8">
+                    <div class="inline-flex items-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading jobs...
+                    </div>
+                </div>
+            }
+            else if (filteredJobs.Any())
+            {
+                <ul class="divide-y divide-gray-200">
+                    @foreach (var job in filteredJobs)
+                    {
+                        <li>
+                            <div class="px-4 py-4 flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center">
+                                            <span class="text-sm font-medium text-white">
+                                                @job.Company.Substring(0, 1).ToUpper()
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="flex items-center">
+                                            <p class="text-sm font-medium text-indigo-600 truncate">
+                                                @job.Title
+                                            </p>
+                                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @GetJobTypeBadgeClass(job.JobType)">
+                                                @job.JobType
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-gray-500">@job.Company • @job.Location</p>
+                                        <p class="text-sm text-gray-900 mt-1">
+                                            @((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@job.Description), "\r?\n|\r", "<br />"))
+                                            <br />
+                                            @((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@job.Requirements), "\r?\n|\r", "<br />"))
+                                            <br />
+                                            @((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@job.Benefits), "\r?\n|\r", "<br />"))
+                                            @* @job.Description *@
+                                            </p>
+                                        <div class="mt-2 flex items-center text-sm text-gray-500">
+                                            <svg class="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                                            </svg>
+                                            Posted @job.PostedDate.ToString("MMM dd, yyyy")
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-lg font-semibold text-gray-900">@job.SalaryRange</span>
+
+                                    <!-- Job Seeker: Apply Button -->
+                                    <AuthorizeView Roles="JobSeeker">
+                                        <Authorized>
+                                            @if (appliedJobs.Contains(job.Id))
+                                            {
+                                                <span class="inline-flex items-center px-3 py-2 border border-green-300 text-sm leading-4 font-medium rounded-md text-green-700 bg-green-50">
+                                                    <svg class="mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    Applied
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <button @onclick="() => ApplyToJob(job.Id)"
+                                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                    Apply Now
+                                                </button>
+                                            }
+                                        </Authorized>
+                                    </AuthorizeView>
+
+                                    <!-- Admin/Employer: Manage Button -->
+                                    <AuthorizeView Roles="Admin,Employer">
+                                        <Authorized>
+                                            <div class="flex space-x-2">
+                                                <button @onclick="() => ViewApplications(job.Id)"
+                                                        class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                    <svg class="mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                    </svg>
+                                                    Applications (@job.ApplicationCount)
+                                                </button>
+                                                <button @onclick="() => EditJob(job.Id)"
+                                                        class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                    Edit
+                                                </button>
+                                            </div>
+                                        </Authorized>
+                                    </AuthorizeView>
+
+                                    <!-- Not Authenticated: Sign in to Apply -->
+                                    <AuthorizeView>
+                                        <NotAuthorized>
+                                            <a href="/login"
+                                               class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                Sign in to Apply
+                                            </a>
+                                        </NotAuthorized>
+                                    </AuthorizeView>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div class="text-center py-8">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No jobs found</h3>
+                    <p class="mt-1 text-sm text-gray-500">Try adjusting your search criteria.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Job Application Modal -->
+@if (showApplicationModal)
+{
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Apply for Job</h3>
+
+                <EditForm Model="@applicationRequest" OnValidSubmit="@SubmitApplication">
+                    <DataAnnotationsValidator />
+
+                    <div class="space-y-4">
+                        <div>
+                            <label for="coverLetter" class="block text-sm font-medium text-gray-700">Cover Letter</label>
+                            <InputTextArea @bind-Value="applicationRequest.CoverLetter"
+                                           id="coverLetter"
+                                           rows="6"
+                                           placeholder="Tell us why you're interested in this position..."
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => applicationRequest.CoverLetter)" class="text-red-600 text-sm mt-1" />
+                        </div>
+
+                        <div>
+                            <label for="resume" class="block text-sm font-medium text-gray-700">Resume (Optional)</label>
+                            <input type="file"
+                                   id="resume"
+                                   accept=".pdf,.doc,.docx"
+                                   class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                            <p class="mt-1 text-sm text-gray-500">PDF, DOC, or DOCX files only</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button"
+                                @onclick="CloseApplicationModal"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Submit Application
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Job> jobs = new();
+    private List<Job> filteredJobs = new();
+    private HashSet<int> appliedJobs = new();
+    private bool isLoading = true;
+    private string searchTerm = string.Empty;
+    private string selectedLocation = string.Empty;
+    private string selectedCategory = string.Empty;
+    private bool showApplicationModal = false;
+    private int selectedJobId = 0;
+    private CreateJobApplicationRequest applicationRequest = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadJobs();
+        await LoadAppliedJobs();
+    }
+
+    private async Task LoadJobs()
+    {
+        isLoading = true;
+
+        jobs = await JobService.GetJobsAsync();
+        filteredJobs = jobs;
+
+        isLoading = false;
+    }
+
+    private async Task LoadAppliedJobs()
+    {
+        try
+        {
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            if (currentUser?.Roles.Contains("JobSeeker") == true)
+            {
+                // Check which jobs the user has applied to
+                foreach (var job in jobs)
+                {
+                    if (await JobService.HasUserAppliedAsync(job.Id))
+                    {
+                        appliedJobs.Add(job.Id);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error silently
+        }
+    }
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        FilterJobs();
+    }
+
+    private void OnLocationChanged(ChangeEventArgs e)
+    {
+        selectedLocation = e.Value?.ToString() ?? string.Empty;
+        FilterJobs();
+        StateHasChanged();
+    }
+
+    private void OnCategoryChanged(ChangeEventArgs e)
+    {
+        selectedCategory = e.Value?.ToString() ?? string.Empty;
+        FilterJobs();
+        StateHasChanged();
+    }
+
+    private void FilterJobs()
+    {
+        filteredJobs = jobs.Where(job =>
+            (string.IsNullOrEmpty(searchTerm) || 
+             job.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             job.Company.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             job.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(selectedLocation) || 
+             job.Location.Contains(selectedLocation, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(selectedCategory) || 
+             job.Category.Equals(selectedCategory, StringComparison.OrdinalIgnoreCase))
+        ).ToList();
+    }
+
+    private void NavigateToCreateJob()
+    {
+        Navigation.NavigateTo("/jobs/create");
+    }
+
+    private async Task ApplyToJob(int jobId)
+    {
+        selectedJobId = jobId;
+        applicationRequest = new CreateJobApplicationRequest();
+        showApplicationModal = true;
+    }
+
+    private async Task SubmitApplication()
+    {
+        try
+        {
+            var result = await JobService.ApplyToJobAsync(selectedJobId, applicationRequest);
+
+            if (result.Success)
+            {
+                appliedJobs.Add(selectedJobId);
+                showApplicationModal = false;
+                await JSRuntime.InvokeVoidAsync("alert", "Application submitted successfully!");
+                StateHasChanged();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", result.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "An error occurred while submitting your application.");
+        }
+    }
+
+    private void CloseApplicationModal()
+    {
+        showApplicationModal = false;
+    }
+
+    private void ViewApplications(int jobId)
+    {
+        Navigation.NavigateTo($"/jobs/{jobId}/applications");
+    }
+
+    private void EditJob(int jobId)
+    {
+        Navigation.NavigateTo($"/jobs/edit/{jobId}");
+    }
+
+    private string GetJobTypeBadgeClass(string jobType)
+    {
+        return jobType.ToLower() switch
+        {
+            "full-time" => "bg-green-100 text-green-800",
+            "part-time" => "bg-blue-100 text-blue-800",
+            "contract" => "bg-yellow-100 text-yellow-800",
+            "remote" => "bg-purple-100 text-purple-800",
+            _ => "bg-gray-100 text-gray-800"
+        };
+    }
+
+}

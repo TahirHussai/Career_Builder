@@ -1,0 +1,169 @@
+@page "/register"
+@using CareerBuilder.Models
+@using CareerBuilder.Services
+@using CareerBuilder.Services.Interface
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject CustomAuthenticationStateProvider AuthStateProvider
+
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Create your account
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Or
+                <a href="/login" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    sign in to your existing account
+                </a>
+            </p>
+        </div>
+        
+        <EditForm Model="@registerRequest" OnValidSubmit="@HandleRegister" class="mt-8 space-y-6">
+            <DataAnnotationsValidator />
+            
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">@errorMessage</span>
+                </div>
+            }
+            
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">@successMessage</span>
+                </div>
+            }
+
+            <div class="rounded-md shadow-sm space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="firstName" class="block text-sm font-medium text-gray-700">First Name</label>
+                        <InputText @bind-Value="registerRequest.FirstName" 
+                                   id="firstName" 
+                                   required 
+                                   class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                                   placeholder="First Name" />
+                        <ValidationMessage For="@(() => registerRequest.FirstName)" class="text-red-600 text-sm mt-1" />
+                    </div>
+                    <div>
+                        <label for="lastName" class="block text-sm font-medium text-gray-700">Last Name</label>
+                        <InputText @bind-Value="registerRequest.LastName" 
+                                   id="lastName" 
+                                   required 
+                                   class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                                   placeholder="Last Name" />
+                        <ValidationMessage For="@(() => registerRequest.LastName)" class="text-red-600 text-sm mt-1" />
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <InputText @bind-Value="registerRequest.Email" 
+                               id="email" 
+                               type="email" 
+                               autocomplete="email" 
+                               required 
+                               class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                               placeholder="Email address" />
+                    <ValidationMessage For="@(() => registerRequest.Email)" class="text-red-600 text-sm mt-1" />
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <InputText @bind-Value="registerRequest.Password" 
+                               id="password" 
+                               type="password" 
+                               autocomplete="new-password" 
+                               required 
+                               class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                               placeholder="Password" />
+                    <ValidationMessage For="@(() => registerRequest.Password)" class="text-red-600 text-sm mt-1" />
+                </div>
+                
+                <div>
+                    <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <InputText @bind-Value="registerRequest.ConfirmPassword" 
+                               id="confirmPassword" 
+                               type="password" 
+                               autocomplete="new-password" 
+                               required 
+                               class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                               placeholder="Confirm Password" />
+                    <ValidationMessage For="@(() => registerRequest.ConfirmPassword)" class="text-red-600 text-sm mt-1" />
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" 
+                        disabled="@isLoading"
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    @if (isLoading)
+                    {
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <svg class="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                        <text>Creating account...</text>
+                    }
+                    else
+                    {
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <svg class="h-5 w-5 text-indigo-500 group-hover:text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                            </svg>
+                        </span>
+                        <text>Create Account</text>
+                    }
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private RegisterRequest registerRequest = new();
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isLoading = false;
+
+    private async Task HandleRegister()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            var result = await AuthService.RegisterAsync(registerRequest);
+
+            if (result.Success && result.User != null)
+            {
+                successMessage = "Registration successful! Redirecting...";
+
+                // Notify authentication state provider
+                await AuthStateProvider.MarkUserAsAuthenticated(result.User);
+
+                await Task.Delay(1000); // Brief delay to show success message
+                Navigation.NavigateTo("/dashboard");
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An unexpected error occurred. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

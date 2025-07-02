@@ -1,0 +1,378 @@
+@page "/admin/settings"
+@using CareerBuilder.Services
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>System Settings - Admin - CareerBuilder</PageTitle>
+
+<div class="bg-white">
+    <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Page header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                    System Settings
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Configure system-wide settings and preferences
+                </p>
+            </div>
+            <div class="mt-4 flex md:mt-0 md:ml-4">
+                <button @onclick="NavigateBack"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Back to Dashboard
+                </button>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <!-- General Settings -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">General Settings</h3>
+                    
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="siteName" class="block text-sm font-medium text-gray-700">Site Name</label>
+                            <input type="text" 
+                                   id="siteName" 
+                                   @bind="settings.SiteName"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                        </div>
+
+                        <div>
+                            <label for="adminEmail" class="block text-sm font-medium text-gray-700">Admin Email</label>
+                            <input type="email" 
+                                   id="adminEmail" 
+                                   @bind="settings.AdminEmail"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="siteDescription" class="block text-sm font-medium text-gray-700">Site Description</label>
+                            <textarea id="siteDescription" 
+                                      @bind="settings.SiteDescription"
+                                      rows="3"
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Settings -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Job Posting Settings</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Require Admin Approval for Jobs</h4>
+                                <p class="text-sm text-gray-500">New job postings must be approved by an admin before going live</p>
+                            </div>
+                            <div class="ml-4">
+                                <input type="checkbox" 
+                                       @bind="settings.RequireJobApproval"
+                                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Auto-expire Jobs</h4>
+                                <p class="text-sm text-gray-500">Automatically expire job postings after a certain period</p>
+                            </div>
+                            <div class="ml-4">
+                                <input type="checkbox" 
+                                       @bind="settings.AutoExpireJobs"
+                                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div>
+                                <label for="defaultJobExpiry" class="block text-sm font-medium text-gray-700">Default Job Expiry (Days)</label>
+                                <input type="number" 
+                                       id="defaultJobExpiry" 
+                                       @bind="settings.DefaultJobExpiryDays"
+                                       min="1"
+                                       max="365"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            </div>
+
+                            <div>
+                                <label for="maxJobsPerEmployer" class="block text-sm font-medium text-gray-700">Max Jobs per Employer</label>
+                                <input type="number" 
+                                       id="maxJobsPerEmployer" 
+                                       @bind="settings.MaxJobsPerEmployer"
+                                       min="1"
+                                       max="100"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Settings -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">User Management</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Allow User Registration</h4>
+                                <p class="text-sm text-gray-500">Allow new users to register accounts</p>
+                            </div>
+                            <div class="ml-4">
+                                <input type="checkbox" 
+                                       @bind="settings.AllowUserRegistration"
+                                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Require Email Verification</h4>
+                                <p class="text-sm text-gray-500">Users must verify their email address before accessing the system</p>
+                            </div>
+                            <div class="ml-4">
+                                <input type="checkbox" 
+                                       @bind="settings.RequireEmailVerification"
+                                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Enable User Profiles</h4>
+                                <p class="text-sm text-gray-500">Allow users to create and manage detailed profiles</p>
+                            </div>
+                            <div class="ml-4">
+                                <input type="checkbox" 
+                                       @bind="settings.EnableUserProfiles"
+                                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Settings -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Email Configuration</h3>
+                    
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="smtpServer" class="block text-sm font-medium text-gray-700">SMTP Server</label>
+                            <input type="text" 
+                                   id="smtpServer" 
+                                   @bind="settings.SmtpServer"
+                                   placeholder="smtp.example.com"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                        </div>
+
+                        <div>
+                            <label for="smtpPort" class="block text-sm font-medium text-gray-700">SMTP Port</label>
+                            <input type="number" 
+                                   id="smtpPort" 
+                                   @bind="settings.SmtpPort"
+                                   placeholder="587"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                        </div>
+
+                        <div>
+                            <label for="smtpUsername" class="block text-sm font-medium text-gray-700">SMTP Username</label>
+                            <input type="text" 
+                                   id="smtpUsername" 
+                                   @bind="settings.SmtpUsername"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                        </div>
+
+                        <div>
+                            <label for="fromEmail" class="block text-sm font-medium text-gray-700">From Email Address</label>
+                            <input type="email" 
+                                   id="fromEmail" 
+                                   @bind="settings.FromEmailAddress"
+                                   placeholder="noreply@careerbuilder.com"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" 
+                                   id="enableSsl" 
+                                   @bind="settings.SmtpEnableSsl"
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            <label for="enableSsl" class="ml-2 block text-sm text-gray-900">
+                                Enable SSL/TLS
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Maintenance -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">System Maintenance</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Maintenance Mode</h4>
+                                <p class="text-sm text-gray-500">Put the system in maintenance mode to prevent user access</p>
+                            </div>
+                            <div class="ml-4">
+                                <input type="checkbox" 
+                                       @bind="settings.MaintenanceMode"
+                                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <button @onclick="ClearCache"
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Clear Cache
+                            </button>
+                            
+                            <button @onclick="BackupDatabase"
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Backup Database
+                            </button>
+                            
+                            <button @onclick="ViewLogs"
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                View System Logs
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Settings Button -->
+            <div class="flex justify-end">
+                <button @onclick="SaveSettings"
+                        disabled="@isSaving"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    @if (isSaving)
+                    {
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <text>Saving...</text>
+                    }
+                    else
+                    {
+                        <text>Save Settings</text>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private SystemSettings settings = new();
+    private bool isSaving = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettings();
+    }
+
+    private async Task LoadSettings()
+    {
+        // TODO: Load actual settings from API
+        await Task.Delay(100);
+        
+        settings = new SystemSettings
+        {
+            SiteName = "CareerBuilder",
+            AdminEmail = "admin@careerbuilder.com",
+            SiteDescription = "Professional job board platform connecting employers with talented job seekers.",
+            RequireJobApproval = false,
+            AutoExpireJobs = true,
+            DefaultJobExpiryDays = 30,
+            MaxJobsPerEmployer = 10,
+            AllowUserRegistration = true,
+            RequireEmailVerification = true,
+            EnableUserProfiles = true,
+            SmtpServer = "smtp.gmail.com",
+            SmtpPort = 587,
+            SmtpUsername = "",
+            FromEmailAddress = "noreply@careerbuilder.com",
+            SmtpEnableSsl = true,
+            MaintenanceMode = false
+        };
+    }
+
+    private async Task SaveSettings()
+    {
+        isSaving = true;
+        
+        try
+        {
+            // TODO: Save settings to API
+            await Task.Delay(1000);
+            
+            await JSRuntime.InvokeVoidAsync("alert", "Settings saved successfully!");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Error saving settings. Please try again.");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task ClearCache()
+    {
+        await JSRuntime.InvokeVoidAsync("alert", "Cache cleared successfully!");
+    }
+
+    private async Task BackupDatabase()
+    {
+        await JSRuntime.InvokeVoidAsync("alert", "Database backup initiated!");
+    }
+
+    private async Task ViewLogs()
+    {
+        await JSRuntime.InvokeVoidAsync("alert", "System logs feature coming soon!");
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/admin");
+    }
+
+    public class SystemSettings
+    {
+        public string SiteName { get; set; } = string.Empty;
+        public string AdminEmail { get; set; } = string.Empty;
+        public string SiteDescription { get; set; } = string.Empty;
+        public bool RequireJobApproval { get; set; }
+        public bool AutoExpireJobs { get; set; }
+        public int DefaultJobExpiryDays { get; set; }
+        public int MaxJobsPerEmployer { get; set; }
+        public bool AllowUserRegistration { get; set; }
+        public bool RequireEmailVerification { get; set; }
+        public bool EnableUserProfiles { get; set; }
+        public string SmtpServer { get; set; } = string.Empty;
+        public int SmtpPort { get; set; }
+        public string SmtpUsername { get; set; } = string.Empty;
+        public string FromEmailAddress { get; set; } = string.Empty;
+        public bool SmtpEnableSsl { get; set; }
+        public bool MaintenanceMode { get; set; }
+    }
+}

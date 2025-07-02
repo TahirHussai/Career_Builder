@@ -1,0 +1,293 @@
+@page "/profile"
+@using CareerBuilder.Models
+@using CareerBuilder.Services
+@using CareerBuilder.Services.Interface
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+
+<PageTitle>Profile - CareerBuilder</PageTitle>
+
+<div class="bg-white">
+    <div class="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Page header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                    My Profile
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Manage your personal information and preferences
+                </p>
+            </div>
+        </div>
+
+        @if (currentUser != null)
+        {
+            <!-- Profile Form -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <EditForm Model="@profileModel" OnValidSubmit="@HandleUpdateProfile">
+                        <DataAnnotationsValidator />
+                        
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                                <span class="block sm:inline">@errorMessage</span>
+                            </div>
+                        }
+                        
+                        @if (!string.IsNullOrEmpty(successMessage))
+                        {
+                            <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                                <span class="block sm:inline">@successMessage</span>
+                            </div>
+                        }
+
+                        <!-- Profile Picture Section -->
+                        <div class="mb-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-20 w-20">
+                                    <div class="h-20 w-20 rounded-full bg-indigo-500 flex items-center justify-center">
+                                        <span class="text-2xl font-medium text-white">
+                                            @(currentUser.FirstName.Substring(0, 1).ToUpper())@(currentUser.LastName.Substring(0, 1).ToUpper())
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="ml-5">
+                                    <h3 class="text-lg font-medium text-gray-900">Profile Picture</h3>
+                                    <p class="text-sm text-gray-500">Update your profile picture to help others recognize you.</p>
+                                    <button type="button" 
+                                            class="mt-2 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        Change Picture
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Personal Information -->
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div>
+                                <label for="firstName" class="block text-sm font-medium text-gray-700">First Name</label>
+                                <InputText @bind-Value="profileModel.FirstName" 
+                                           id="firstName" 
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                <ValidationMessage For="@(() => profileModel.FirstName)" class="text-red-600 text-sm mt-1" />
+                            </div>
+
+                            <div>
+                                <label for="lastName" class="block text-sm font-medium text-gray-700">Last Name</label>
+                                <InputText @bind-Value="profileModel.LastName" 
+                                           id="lastName" 
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                <ValidationMessage For="@(() => profileModel.LastName)" class="text-red-600 text-sm mt-1" />
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                                <InputText @bind-Value="profileModel.Email" 
+                                           id="email" 
+                                           type="email"
+                                           disabled="true"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 sm:text-sm" />
+                                <p class="mt-1 text-sm text-gray-500">Email cannot be changed. Contact support if you need to update your email.</p>
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                                <InputText @bind-Value="profileModel.PhoneNumber" 
+                                           id="phone" 
+                                           type="tel"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                <ValidationMessage For="@(() => profileModel.PhoneNumber)" class="text-red-600 text-sm mt-1" />
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label for="bio" class="block text-sm font-medium text-gray-700">Bio</label>
+                                <InputTextArea @bind-Value="profileModel.Bio" 
+                                               id="bio" 
+                                               rows="4"
+                                               placeholder="Tell us about yourself..."
+                                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                <ValidationMessage For="@(() => profileModel.Bio)" class="text-red-600 text-sm mt-1" />
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
+                                <InputText @bind-Value="profileModel.Location" 
+                                           id="location" 
+                                           placeholder="City, State/Province, Country"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                <ValidationMessage For="@(() => profileModel.Location)" class="text-red-600 text-sm mt-1" />
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label for="website" class="block text-sm font-medium text-gray-700">Website/Portfolio</label>
+                                <InputText @bind-Value="profileModel.Website" 
+                                           id="website" 
+                                           type="url"
+                                           placeholder="https://yourwebsite.com"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                <ValidationMessage For="@(() => profileModel.Website)" class="text-red-600 text-sm mt-1" />
+                            </div>
+                        </div>
+
+                        <!-- Account Information -->
+                        <div class="mt-8 pt-6 border-t border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Account Information</h3>
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Account Type</label>
+                                    <div class="mt-1 flex flex-wrap gap-2">
+                                        @foreach (var role in currentUser.Roles)
+                                        {
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @GetRoleBadgeClass(role)">
+                                                @role
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Member Since</label>
+                                    <p class="mt-1 text-sm text-gray-900">@DateTime.Now.ToString("MMMM yyyy")</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end space-x-3">
+                            <button type="button" 
+                                    @onclick="NavigateBack"
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    disabled="@isLoading"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                @if (isLoading)
+                                {
+                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <text>Updating...</text>
+                                }
+                                else
+                                {
+                                    <text>Update Profile</text>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8">
+                <div class="inline-flex items-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Loading profile...
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private UserInfo? currentUser;
+    private ProfileModel profileModel = new();
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await AuthService.GetCurrentUserAsync();
+        if (currentUser != null)
+        {
+            profileModel = new ProfileModel
+            {
+                FirstName = currentUser.FirstName,
+                LastName = currentUser.LastName,
+                Email = currentUser.Email,
+                PhoneNumber = "", // TODO: Get from user profile
+                Bio = "", // TODO: Get from user profile
+                Location = "", // TODO: Get from user profile
+                Website = "" // TODO: Get from user profile
+            };
+        }
+    }
+
+    private async Task HandleUpdateProfile()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            // TODO: Implement profile update API call
+            await Task.Delay(1000); // Simulate API call
+            
+            successMessage = "Profile updated successfully!";
+            
+            // Clear success message after 3 seconds
+            await Task.Delay(3000);
+            successMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while updating your profile. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void NavigateBack()
+    {
+        if (currentUser?.Roles.Contains("Admin") == true)
+        {
+            Navigation.NavigateTo("/admin");
+        }
+        else if (currentUser?.Roles.Contains("Employer") == true)
+        {
+            Navigation.NavigateTo("/employer/dashboard");
+        }
+        else if (currentUser?.Roles.Contains("JobSeeker") == true)
+        {
+            Navigation.NavigateTo("/jobseeker/dashboard");
+        }
+        else
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    private string GetRoleBadgeClass(string role)
+    {
+        return role switch
+        {
+            "Admin" => "bg-red-100 text-red-800",
+            "Employer" => "bg-blue-100 text-blue-800",
+            "JobSeeker" => "bg-green-100 text-green-800",
+            _ => "bg-gray-100 text-gray-800"
+        };
+    }
+
+    public class ProfileModel
+    {
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string Bio { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public string Website { get; set; } = string.Empty;
+    }
+}

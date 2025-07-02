@@ -1,0 +1,6 @@
+@CareerBuilder.API.New_HostAddress = http://localhost:5047
+
+GET {{CareerBuilder.API.New_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

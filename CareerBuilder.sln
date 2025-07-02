@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CareerBuilder", "CareerBuilder\CareerBuilder.csproj", "{493D1370-07E9-493E-A746-AEA27D0D4B1B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CareerBuilder.API", "CareerBuilder.API\CareerBuilder.API.csproj", "{B8F3E8A1-1234-5678-9ABC-DEF012345678}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{493D1370-07E9-493E-A746-AEA27D0D4B1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{493D1370-07E9-493E-A746-AEA27D0D4B1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{493D1370-07E9-493E-A746-AEA27D0D4B1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{493D1370-07E9-493E-A746-AEA27D0D4B1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8F3E8A1-1234-5678-9ABC-DEF012345678}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8F3E8A1-1234-5678-9ABC-DEF012345678}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8F3E8A1-1234-5678-9ABC-DEF012345678}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8F3E8A1-1234-5678-9ABC-DEF012345678}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AF19A368-6348-4A32-9F20-B890E21AD325}
+	EndGlobalSection
+EndGlobal

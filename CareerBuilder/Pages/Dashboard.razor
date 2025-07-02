@@ -1,0 +1,207 @@
+@page "/dashboard"
+@using CareerBuilder.Models
+@using CareerBuilder.Services
+@using CareerBuilder.Services.Interface
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@attribute [Authorize]
+
+<PageTitle>Dashboard - CareerBuilder</PageTitle>
+
+<div class="bg-white">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Welcome Section -->
+        <div class="bg-white overflow-hidden shadow rounded-lg mb-6">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="h-16 w-16 rounded-full bg-indigo-500 flex items-center justify-center">
+                            <span class="text-xl font-medium text-white">
+                                @if (currentUser != null)
+                                {
+                                    @(currentUser.FirstName.Substring(0, 1).ToUpper())@(currentUser.LastName.Substring(0, 1).ToUpper())
+                                }
+                            </span>
+                        </div>
+                    </div>
+                    <div class="ml-5">
+                        <h1 class="text-2xl font-bold text-gray-900">
+                            Welcome back, @(currentUser?.FirstName ?? "User")!
+                        </h1>
+                        <p class="text-sm text-gray-500">
+                            @if (currentUser?.Roles.Any() == true)
+                            {
+                                <span>Your role: @string.Join(", ", currentUser.Roles)</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role-based Content -->
+        <AuthorizeView Roles="Admin">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                            Administrator Access
+                        </h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>You have administrator privileges. You can manage users and system settings.</p>
+                        </div>
+                        <div class="mt-4">
+                            <div class="-mx-2 -my-1.5 flex">
+                                <button @onclick="NavigateToAdmin"
+                                        class="bg-red-50 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600">
+                                    Go to Admin Panel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Employer">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800">
+                            Employer Dashboard
+                        </h3>
+                        <div class="mt-2 text-sm text-blue-700">
+                            <p>Manage your job postings and view applications.</p>
+                        </div>
+                        <div class="mt-4">
+                            <div class="-mx-2 -my-1.5 flex">
+                                <button @onclick="NavigateToJobs"
+                                        class="bg-blue-50 px-2 py-1.5 rounded-md text-sm font-medium text-blue-800 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-50 focus:ring-blue-600">
+                                    Manage Jobs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="JobSeeker">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-green-800">
+                            Job Seeker Dashboard
+                        </h3>
+                        <div class="mt-2 text-sm text-green-700">
+                            <p>Find and apply to job opportunities that match your skills.</p>
+                        </div>
+                        <div class="mt-4">
+                            <div class="-mx-2 -my-1.5 flex">
+                                <button @onclick="NavigateToJobs"
+                                        class="bg-green-50 px-2 py-1.5 rounded-md text-sm font-medium text-green-800 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-50 focus:ring-green-600">
+                                    Browse Jobs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </AuthorizeView>
+
+        <!-- Quick Actions -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <button @onclick="NavigateToProfile"
+                            class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="absolute inset-0" aria-hidden="true"></span>
+                            <p class="text-sm font-medium text-gray-900">Edit Profile</p>
+                            <p class="text-sm text-gray-500">Update your information</p>
+                        </div>
+                    </button>
+
+                    <button @onclick="NavigateToJobs"
+                            class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="absolute inset-0" aria-hidden="true"></span>
+                            <p class="text-sm font-medium text-gray-900">View Jobs</p>
+                            <p class="text-sm text-gray-500">Browse available positions</p>
+                        </div>
+                    </button>
+
+                    <button @onclick="NavigateToSettings"
+                            class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="absolute inset-0" aria-hidden="true"></span>
+                            <p class="text-sm font-medium text-gray-900">Settings</p>
+                            <p class="text-sm text-gray-500">Account preferences</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private UserInfo? currentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await AuthService.GetCurrentUserAsync();
+    }
+
+    private void NavigateToAdmin()
+    {
+        Navigation.NavigateTo("/admin");
+    }
+
+    private void NavigateToJobs()
+    {
+        Navigation.NavigateTo("/jobs");
+    }
+
+    private void NavigateToProfile()
+    {
+        Navigation.NavigateTo("/profile");
+    }
+
+    private void NavigateToSettings()
+    {
+        Navigation.NavigateTo("/settings");
+    }
+}

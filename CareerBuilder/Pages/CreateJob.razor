@@ -1,0 +1,234 @@
+@page "/jobs/create"
+@using CareerBuilder.Models
+@using CareerBuilder.Services
+@using CareerBuilder.Services.Interface
+@inject IJobService JobService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@attribute [Authorize(Roles = "Admin,Employer")]
+
+<PageTitle>Post New Job - CareerBuilder</PageTitle>
+
+<div class="bg-white">
+    <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Page header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                    Post New Job
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Create a new job posting to attract qualified candidates
+                </p>
+            </div>
+            <div class="mt-4 flex md:mt-0 md:ml-4">
+                <button @onclick="NavigateBack"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Back to Jobs
+                </button>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <EditForm Model="@createJobRequest" OnValidSubmit="@HandleCreateJob">
+                    <DataAnnotationsValidator />
+                    
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                            <span class="block sm:inline">@errorMessage</span>
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(successMessage))
+                    {
+                        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                            <span class="block sm:inline">@successMessage</span>
+                        </div>
+                    }
+
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div class="sm:col-span-2">
+                            <label for="title" class="block text-sm font-medium text-gray-700">Job Title</label>
+                            <InputText @bind-Value="createJobRequest.Title" 
+                                       id="title" 
+                                       placeholder="e.g. Senior Software Engineer"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => createJobRequest.Title)" class="text-red-600 text-sm mt-1" />
+                        </div>
+
+                        <div>
+                            <label for="company" class="block text-sm font-medium text-gray-700">Company Name</label>
+                            <InputText @bind-Value="createJobRequest.Company" 
+                                       id="company" 
+                                       placeholder="Your company name"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => createJobRequest.Company)" class="text-red-600 text-sm mt-1" />
+                        </div>
+
+                        <div>
+                            <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
+                            <InputText @bind-Value="createJobRequest.Location" 
+                                       id="location" 
+                                       placeholder="e.g. San Francisco, CA or Remote"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => createJobRequest.Location)" class="text-red-600 text-sm mt-1" />
+                        </div>
+
+                        <div>
+                            <label for="jobType" class="block text-sm font-medium text-gray-700">Job Type</label>
+                            <InputSelect @bind-Value="createJobRequest.JobType" 
+                                         id="jobType" 
+                                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">Select job type</option>
+                                <option value="Full-time">Full-time</option>
+                                <option value="Part-time">Part-time</option>
+                                <option value="Contract">Contract</option>
+                                <option value="Remote">Remote</option>
+                                <option value="Internship">Internship</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => createJobRequest.JobType)" class="text-red-600 text-sm mt-1" />
+                        </div>
+
+                        <div>
+                            <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                            <InputSelect @bind-Value="createJobRequest.Category" 
+                                         id="category" 
+                                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">Select category</option>
+                                <option value="technology">Technology</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="sales">Sales</option>
+                                <option value="design">Design</option>
+                                <option value="finance">Finance</option>
+                                <option value="healthcare">Healthcare</option>
+                                <option value="education">Education</option>
+                                <option value="other">Other</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => createJobRequest.Category)" class="text-red-600 text-sm mt-1" />
+                        </div>
+
+                        <div>
+                            <label for="salaryRange" class="block text-sm font-medium text-gray-700">Salary Range</label>
+                            <InputText @bind-Value="createJobRequest.SalaryRange" 
+                                       id="salaryRange" 
+                                       placeholder="e.g. $80k - $120k"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => createJobRequest.SalaryRange)" class="text-red-600 text-sm mt-1" />
+                        </div>
+
+                        <div>
+                            <label for="expiryDate" class="block text-sm font-medium text-gray-700">Application Deadline (Optional)</label>
+                            <InputDate @bind-Value="createJobRequest.ExpiryDate" 
+                                       id="expiryDate" 
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => createJobRequest.ExpiryDate)" class="text-red-600 text-sm mt-1" />
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="description" class="block text-sm font-medium text-gray-700">Job Description</label>
+                            <InputTextArea @bind-Value="createJobRequest.Description" 
+                                           id="description" 
+                                           rows="6"
+                                           placeholder="Describe the role, responsibilities, and what you're looking for in a candidate..."
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => createJobRequest.Description)" class="text-red-600 text-sm mt-1" />
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="requirements" class="block text-sm font-medium text-gray-700">Requirements</label>
+                            <InputTextArea @bind-Value="createJobRequest.Requirements" 
+                                           id="requirements" 
+                                           rows="4"
+                                           placeholder="List the required skills, experience, and qualifications..."
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => createJobRequest.Requirements)" class="text-red-600 text-sm mt-1" />
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="benefits" class="block text-sm font-medium text-gray-700">Benefits</label>
+                            <InputTextArea @bind-Value="createJobRequest.Benefits" 
+                                           id="benefits" 
+                                           rows="3"
+                                           placeholder="Describe the benefits, perks, and what makes your company great..."
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            <ValidationMessage For="@(() => createJobRequest.Benefits)" class="text-red-600 text-sm mt-1" />
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" 
+                                @onclick="NavigateBack"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                disabled="@isLoading"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                            @if (isLoading)
+                            {
+                                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <text>Posting Job...</text>
+                            }
+                            else
+                            {
+                                <text>Post Job</text>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateJobRequest createJobRequest = new();
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isLoading = false;
+
+    private async Task HandleCreateJob()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            var result = await JobService.CreateJobAsync(createJobRequest);
+            
+            if (result.Success)
+            {
+                successMessage = "Job posted successfully! Redirecting...";
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/jobs");
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An unexpected error occurred. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/jobs");
+    }
+}

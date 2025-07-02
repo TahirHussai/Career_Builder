@@ -1,0 +1,400 @@
+@page "/settings"
+@using CareerBuilder.Models
+@using CareerBuilder.Services
+@using CareerBuilder.Services.Interface
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+
+<PageTitle>Settings - CareerBuilder</PageTitle>
+
+<div class="bg-white">
+    <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Page header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                    Account Settings
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Manage your account preferences and security settings
+                </p>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Notification Settings -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Notification Preferences</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Email Notifications</h4>
+                                <p class="text-sm text-gray-500">Receive email updates about job matches and account activity</p>
+                            </div>
+                            <div class="ml-4">
+                                <input type="checkbox" 
+                                       @bind="settings.EmailNotifications"
+                                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Job Alerts</h4>
+                                <p class="text-sm text-gray-500">Get notified when new jobs match your preferences</p>
+                            </div>
+                            <div class="ml-4">
+                                <input type="checkbox" 
+                                       @bind="settings.JobAlerts"
+                                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Marketing Communications</h4>
+                                <p class="text-sm text-gray-500">Receive updates about new features and career tips</p>
+                            </div>
+                            <div class="ml-4">
+                                <input type="checkbox" 
+                                       @bind="settings.MarketingEmails"
+                                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Privacy Settings -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Privacy Settings</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Profile Visibility</h4>
+                                <p class="text-sm text-gray-500">Allow employers to find and view your profile</p>
+                            </div>
+                            <div class="ml-4">
+                                <input type="checkbox" 
+                                       @bind="settings.ProfileVisible"
+                                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Show Online Status</h4>
+                                <p class="text-sm text-gray-500">Display when you were last active on the platform</p>
+                            </div>
+                            <div class="ml-4">
+                                <input type="checkbox" 
+                                       @bind="settings.ShowOnlineStatus"
+                                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Security</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Password</h4>
+                                <p class="text-sm text-gray-500">Last changed 30 days ago</p>
+                            </div>
+                            <div class="ml-4">
+                                <button @onclick="ShowChangePassword"
+                                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Change Password
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Two-Factor Authentication</h4>
+                                <p class="text-sm text-gray-500">Add an extra layer of security to your account</p>
+                            </div>
+                            <div class="ml-4">
+                                <button @onclick="Setup2FA"
+                                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    @(settings.TwoFactorEnabled ? "Disable" : "Enable")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Password Modal -->
+            @if (showPasswordModal)
+            {
+                <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                        <div class="mt-3">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
+                            
+                            <EditForm Model="@passwordModel" OnValidSubmit="@HandleChangePassword">
+                                <DataAnnotationsValidator />
+                                
+                                @if (!string.IsNullOrEmpty(passwordError))
+                                {
+                                    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                                        <span class="block sm:inline">@passwordError</span>
+                                    </div>
+                                }
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="currentPassword" class="block text-sm font-medium text-gray-700">Current Password</label>
+                                        <InputText @bind-Value="passwordModel.CurrentPassword" 
+                                                   id="currentPassword" 
+                                                   type="password"
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                        <ValidationMessage For="@(() => passwordModel.CurrentPassword)" class="text-red-600 text-sm mt-1" />
+                                    </div>
+
+                                    <div>
+                                        <label for="newPassword" class="block text-sm font-medium text-gray-700">New Password</label>
+                                        <InputText @bind-Value="passwordModel.NewPassword" 
+                                                   id="newPassword" 
+                                                   type="password"
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                        <ValidationMessage For="@(() => passwordModel.NewPassword)" class="text-red-600 text-sm mt-1" />
+                                    </div>
+
+                                    <div>
+                                        <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                                        <InputText @bind-Value="passwordModel.ConfirmPassword" 
+                                                   id="confirmPassword" 
+                                                   type="password"
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                        <ValidationMessage For="@(() => passwordModel.ConfirmPassword)" class="text-red-600 text-sm mt-1" />
+                                    </div>
+                                </div>
+
+                                <div class="mt-6 flex justify-end space-x-3">
+                                    <button type="button" 
+                                            @onclick="HideChangePassword"
+                                            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" 
+                                            disabled="@isChangingPassword"
+                                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        @if (isChangingPassword)
+                                        {
+                                            <text>Changing...</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Change Password</text>
+                                        }
+                                    </button>
+                                </div>
+                            </EditForm>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Account Actions -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Account Actions</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">Download Your Data</h4>
+                                <p class="text-sm text-gray-500">Get a copy of all your account data</p>
+                            </div>
+                            <div class="ml-4">
+                                <button @onclick="DownloadData"
+                                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Download
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-red-900">Delete Account</h4>
+                                <p class="text-sm text-red-600">Permanently delete your account and all associated data</p>
+                            </div>
+                            <div class="ml-4">
+                                <button @onclick="ShowDeleteConfirmation"
+                                        class="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                    Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Settings Button -->
+            <div class="flex justify-end">
+                <button @onclick="SaveSettings"
+                        disabled="@isSaving"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    @if (isSaving)
+                    {
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <text>Saving...</text>
+                    }
+                    else
+                    {
+                        <text>Save Settings</text>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private UserSettings settings = new();
+    private PasswordChangeModel passwordModel = new();
+    private bool showPasswordModal = false;
+    private bool isSaving = false;
+    private bool isChangingPassword = false;
+    private string passwordError = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettings();
+    }
+
+    private async Task LoadSettings()
+    {
+        // TODO: Load actual user settings from API
+        await Task.Delay(100);
+        
+        settings = new UserSettings
+        {
+            EmailNotifications = true,
+            JobAlerts = true,
+            MarketingEmails = false,
+            ProfileVisible = true,
+            ShowOnlineStatus = true,
+            TwoFactorEnabled = false
+        };
+    }
+
+    private async Task SaveSettings()
+    {
+        isSaving = true;
+        
+        try
+        {
+            // TODO: Save settings to API
+            await Task.Delay(1000);
+            
+            await JSRuntime.InvokeVoidAsync("alert", "Settings saved successfully!");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Error saving settings. Please try again.");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void ShowChangePassword()
+    {
+        passwordModel = new PasswordChangeModel();
+        passwordError = string.Empty;
+        showPasswordModal = true;
+    }
+
+    private void HideChangePassword()
+    {
+        showPasswordModal = false;
+    }
+
+    private async Task HandleChangePassword()
+    {
+        isChangingPassword = true;
+        passwordError = string.Empty;
+
+        try
+        {
+            if (passwordModel.NewPassword != passwordModel.ConfirmPassword)
+            {
+                passwordError = "New passwords do not match.";
+                return;
+            }
+
+            // TODO: Implement password change API call
+            await Task.Delay(1000);
+            
+            await JSRuntime.InvokeVoidAsync("alert", "Password changed successfully!");
+            HideChangePassword();
+        }
+        catch (Exception ex)
+        {
+            passwordError = "Error changing password. Please try again.";
+        }
+        finally
+        {
+            isChangingPassword = false;
+        }
+    }
+
+    private async Task Setup2FA()
+    {
+        // TODO: Implement 2FA setup
+        settings.TwoFactorEnabled = !settings.TwoFactorEnabled;
+        await JSRuntime.InvokeVoidAsync("alert", $"Two-factor authentication {(settings.TwoFactorEnabled ? "enabled" : "disabled")}!");
+    }
+
+    private async Task DownloadData()
+    {
+        // TODO: Implement data download
+        await JSRuntime.InvokeVoidAsync("alert", "Data download will be available soon!");
+    }
+
+    private async Task ShowDeleteConfirmation()
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete your account? This action cannot be undone.");
+        if (confirmed)
+        {
+            // TODO: Implement account deletion
+            await JSRuntime.InvokeVoidAsync("alert", "Account deletion will be available soon!");
+        }
+    }
+
+    public class UserSettings
+    {
+        public bool EmailNotifications { get; set; }
+        public bool JobAlerts { get; set; }
+        public bool MarketingEmails { get; set; }
+        public bool ProfileVisible { get; set; }
+        public bool ShowOnlineStatus { get; set; }
+        public bool TwoFactorEnabled { get; set; }
+    }
+
+    public class PasswordChangeModel
+    {
+        public string CurrentPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

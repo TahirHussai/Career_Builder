@@ -1,0 +1,165 @@
+﻿@page "/test"
+
+@using CareerBuilder.Models
+@using CareerBuilder.Services
+@using System.Text.RegularExpressions
+@using System.Web
+@using System.IO.Compression
+@using System.IO
+@using CareerBuilder.Services.Interface
+
+@inject IAuthService AuthService
+@inject IJobService JobService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@* @inject IWebHostEnvironment webHostEnvironment *@
+@inject HttpClient httpClient
+
+<PageTitle>Jobs - CareerBuilder</PageTitle>
+
+<div class="bg-white">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Page header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                    Upload File
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Test Page to upload a file and display its content.
+                </p>
+            </div>
+        </div>
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+             <table>
+                <tr>
+                    <td>
+                        <InputFile OnChange="LoadFiles" multiple />
+                        @if (csvData != null)
+                        {
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Age</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in csvData)
+                                    {
+                                        <tr>
+                                            <td>@item.Name</td>
+                                            <td>@item.Age</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <InputFile OnChange="HandleFileSelected" multiple />
+                    </td>
+                </tr>                
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<MyData> csvData;
+
+    private class MyData
+    {
+        public string Name { get; set; }
+        public int Age { get; set; }
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles();
+        if (files.Count > 0)
+        {
+            var file = files[0];
+            using (var reader = new StreamReader(file.OpenReadStream()))
+            {
+                csvData = new List<MyData>();
+                string line;
+                // Skip header row
+                await reader.ReadLineAsync();
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    var parts = line.Split(',');
+                    if (parts.Length == 2)
+                    {
+                        csvData.Add(new MyData { Name = parts[0], Age = int.Parse(parts[1]) });
+                    }
+                }
+            }
+        }
+    }
+
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        foreach (var file in e.GetMultipleFiles())
+        {
+            using (var stream = file.OpenReadStream())
+            {
+                await ReadZipFile(stream);
+            }
+        }
+    }
+
+    private async Task ReadZipFile(Stream stream)
+    {
+        using (var zipArchive = new ZipArchive(stream, ZipArchiveMode.Read))
+        {
+            foreach (var entry in zipArchive.Entries)
+            {
+                if (entry.Name.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                {
+                    using (var entryStream = entry.Open())
+                    using (var reader = new StreamReader(entryStream))
+                    {
+                        csvData = new List<MyData>();
+                        string line;
+                        // Skip header row
+                        await reader.ReadLineAsync();
+                        while ((line = await reader.ReadLineAsync()) != null)
+                        {
+                            var parts = line.Split(',');
+                            if (parts.Length == 2)
+                            {
+                                csvData.Add(new MyData { Name = parts[0], Age = int.Parse(parts[1]) });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private string FileContent { get; set; } = "";
+
+    // private async Task HandleFileSelected(ChangeEventArgs e)
+    // {
+    //     var files = e.Value as IReadOnlyList<IBrowserFile>;
+    //     if (files != null && files.Count > 0)
+    //     {
+    //         var file = files[0];
+    //         using (var stream = file.OpenReadStream())
+    //         {
+    //             using (var reader = new StreamReader(stream))
+    //             {
+    //                 FileContent = await reader.ReadToEndAsync();
+    //             }
+    //         }
+    //     }
+    // }
+
+    
+
+
+}
