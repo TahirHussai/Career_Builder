@@ -244,15 +244,15 @@ public class Root
     public DateTime submissionDate { get; set; }
 }
 
-public class Skill
-{
-    public string name { get; set; }
-    public string code { get; set; }
-    public string description { get; set; }
-    public bool isRequired { get; set; }
-    public Experience experience { get; set; }
-    public Level level { get; set; }
-}
+//public class Skill
+//{
+//    public string name { get; set; }
+//    public string code { get; set; }
+//    public string description { get; set; }
+//    public bool isRequired { get; set; }
+//    public Experience experience { get; set; }
+//    public Level level { get; set; }
+//}
 
 public class TaxLocation
 {

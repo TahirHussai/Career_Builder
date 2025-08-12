@@ -2,6 +2,7 @@ using CareerBuilder.API.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace CareerBuilder.API.Data;
 
@@ -13,6 +14,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     }
 
     public DbSet<JobPosting> JobPostings { get; set; }
+    public DbSet<Certification> Certifications { get; set; }
+    public DbSet<Skill> Skills { get; set; }
+    public DbSet<WorkExperience> WorkExperiences { get; set; }
+    public DbSet<Resume> Resumes { get; set; }
+    public DbSet<Education> Educations { get; set; }
+    public DbSet<ContactInformation> ContactInformations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -42,11 +49,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.SalaryMin).HasColumnType("decimal(18,2)");
             entity.Property(e => e.SalaryMax).HasColumnType("decimal(18,2)");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-            
+
             entity.HasOne(e => e.User)
                   .WithMany(u => u.JobPostings)
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
+        builder.Entity<WorkExperience>()
+       .HasOne(w => w.Resume)
+       .WithMany(r => r.Experiences)
+       .HasForeignKey(w => w.ResumeId);
     }
 }
