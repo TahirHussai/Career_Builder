@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,9 +80,20 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configure MLSettings
+builder.Services.Configure<MLSettings>(builder.Configuration.GetSection("ML"));
+
 // Register custom services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+//builder.Services.AddScoped<IResumeParserService, ResumeParserService>();
+builder.Services.AddScoped<IResumeProcessingService, ResumeProcessingService>();
+builder.Services.AddSingleton<PdfTextExtractor>();
+builder.Services.AddSingleton<DocxTextExtractor>();
+builder.Services.AddSingleton<ImageTextExtractor>();
+builder.Services.AddSingleton<ITextExtractor, TextExtractor>();
+builder.Services.AddScoped<IMLKeywordExtractionService, MLKeywordExtractionService>(); // 
+//builder.Services.AddScoped<ICandidateService, CandidateService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
